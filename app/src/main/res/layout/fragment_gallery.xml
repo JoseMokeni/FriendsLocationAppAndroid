@@ -100,4 +100,23 @@
             android:text="Add" />
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btn_getCurrentLocation_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Get current location" />
+
+        <Button
+            android:id="@+id/btn_openMap_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Open Map" />
+    </LinearLayout>
+
 </LinearLayout>

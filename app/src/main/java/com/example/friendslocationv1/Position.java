@@ -23,4 +23,17 @@ public class Position {
                 ", pseudo='" + pseudo + '\'' +
                 '}';
     }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public String getPseudo() {
+        return pseudo;
+    }
+
 }

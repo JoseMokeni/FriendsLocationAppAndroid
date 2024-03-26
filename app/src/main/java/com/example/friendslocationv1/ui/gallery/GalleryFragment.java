@@ -1,7 +1,14 @@
 package com.example.friendslocationv1.ui.gallery;
 
+
+import static com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY;
+
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,14 +19,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.friendslocationv1.Config;
 import com.example.friendslocationv1.JSONParser;
+import com.example.friendslocationv1.MainActivity;
+import com.example.friendslocationv1.MapsActivity;
 import com.example.friendslocationv1.Position;
 import com.example.friendslocationv1.databinding.FragmentGalleryBinding;
 import com.example.friendslocationv1.ui.home.HomeFragment;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,18 +45,58 @@ public class GalleryFragment extends Fragment {
 
     private FragmentGalleryBinding binding;
 
+    // location services client
+    private FusedLocationProviderClient fusedLocationClient;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        GalleryViewModel galleryViewModel =
-                new ViewModelProvider(this).get(GalleryViewModel.class);
 
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // initialize fused location client
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.getActivity());
 
         binding.btnAddGallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 new Insert(GalleryFragment.this.getActivity()).execute();
+            }
+        });
+
+        binding.btnOpenMapAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // open the map activity
+                startActivityForResult(new Intent(GalleryFragment.this.getActivity(), MapsActivity.class), 1);
+            }
+        });
+
+        binding.btnGetCurrentLocationAdd.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onClick(View v) {
+                // check if permissions are granted
+                if (!MainActivity.PERMISSION) {
+                    // show an alert dialog
+                    AlertDialog.Builder builder = new AlertDialog.Builder(GalleryFragment.this.getActivity());
+                    builder.setTitle("Permissions");
+                    builder.setMessage("Please grant permissions to access location services");
+                    builder.setPositiveButton("OK", null);
+                    builder.show();
+                } else {
+                    // get current location
+                    fusedLocationClient.getLastLocation()
+                            .addOnSuccessListener(GalleryFragment.this.getActivity(), location -> {
+                                if (location != null) {
+                                    // get the current location
+                                    binding.edLatitudeGallery.setText(String.valueOf(location.getLatitude()));
+                                    binding.edLongitudeGallery.setText(String.valueOf(location.getLongitude()));
+                                }
+                            });
+
+                }
+
             }
         });
 
@@ -56,6 +110,20 @@ public class GalleryFragment extends Fragment {
         });
 
         return root;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1 && resultCode == 1) {
+            // get the result
+            String result = data.getData().toString();
+            String[] parts = result.split(",");
+            binding.edLatitudeGallery.setText(parts[0]);
+            binding.edLongitudeGallery.setText(parts[1]);
+        }
+
     }
 
     @Override
