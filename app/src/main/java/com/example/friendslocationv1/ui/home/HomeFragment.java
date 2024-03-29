@@ -13,9 +13,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.friendslocationv1.Config;
 import com.example.friendslocationv1.JSONParser;
+import com.example.friendslocationv1.MyPositionAdapter;
 import com.example.friendslocationv1.Position;
 import com.example.friendslocationv1.databinding.FragmentHomeBinding;
 
@@ -125,10 +127,11 @@ public class HomeFragment extends Fragment {
         @Override
         protected void onPostExecute(Object o) {//ui thread (main thread)
             // Create the adapter
-            ArrayAdapter<Position> positionArrayAdapter =
-                    new ArrayAdapter<Position>(HomeFragment.this.getActivity(), android.R.layout.simple_list_item_1, data);
+            MyPositionAdapter positionArrayAdapter = new MyPositionAdapter(con, data);
 
-            binding.lvHomePos.setAdapter(positionArrayAdapter);
+            LinearLayoutManager layoutManager = new LinearLayoutManager(con, LinearLayoutManager.VERTICAL, false);
+            binding.recyclerViewPositions.setLayoutManager(layoutManager);
+            binding.recyclerViewPositions.setAdapter(positionArrayAdapter);
             //hide dialogue box show result
             alert.dismiss();
 

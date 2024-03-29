@@ -25,9 +25,10 @@
         android:layout_weight="0"
         android:text="Download" />
 
-    <ListView
-        android:id="@+id/lv_home_pos"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewPositions"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="0" />
+
 </LinearLayout>

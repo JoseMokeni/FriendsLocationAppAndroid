@@ -147,7 +147,7 @@ public class GalleryFragment extends Fragment {
         protected void onPreExecute() {//ui thread (main thread)
             // show dialogue box
             AlertDialog.Builder builder = new AlertDialog.Builder(con);
-            builder.setTitle("Downloading");
+            builder.setTitle("Inserting");
             builder.setMessage("Please wait... :)");
             alert = builder.create();
             alert.show();

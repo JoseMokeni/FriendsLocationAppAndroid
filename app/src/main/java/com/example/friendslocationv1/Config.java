@@ -10,4 +10,6 @@ public class Config {
     public static final String URL_GET_ALL="http://"+IP+"/servicephp/get_all.php";
     public static final String URL_ADD_POSITION="http://"+IP+"/servicephp/add_position.php";
 
+    public static final String URL_DELETE_POSITION="http://"+IP+"/servicephp/delete_position.php";
+
 }
