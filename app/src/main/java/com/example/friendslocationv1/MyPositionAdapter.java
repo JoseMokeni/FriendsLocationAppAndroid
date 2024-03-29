@@ -51,9 +51,9 @@ public class MyPositionAdapter extends RecyclerView.Adapter<MyPositionAdapter.My
         // Affectation des views
         Position p = data.get(position);
 
-        holder.tvPseudo.setText(p.getPseudo());
-        holder.tvLongitude.setText(p.getLongitude());
-        holder.tvLatitude.setText(p.getLatitude());
+        holder.tvPseudo.setText("Pseudo: " + p.getPseudo());
+        holder.tvLongitude.setText("Long: " + p.getLongitude());
+        holder.tvLatitude.setText("Lat: " + p.getLatitude());
     }
 
     @Override
