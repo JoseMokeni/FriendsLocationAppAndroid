@@ -3,27 +3,49 @@ package com.example.friendslocationv1;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.friendslocationv1.databinding.ActivityMapsBinding;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private GoogleMap mMap;
+    private GoogleMap map;
     private ActivityMapsBinding binding;
 
     private LatLng latLng;
+
+    LocationCallback locationCallback;
+    boolean requestingLocationUpdate = false;
+
+    private FusedLocationProviderClient fusedLocationClient;
+
+
+    LatLng currentPosition;
+
+    Marker currentPositionMarker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,39 +58,111 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopLocationUpdate();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdate();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!requestingLocationUpdate) {
+            startLocationUpdate();
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void startLocationUpdate() {
+        if (!MainActivity.PERMISSION) {
+            // show an alert dialog
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Permissions");
+            builder.setMessage("Please grant permissions to get current location updates");
+            builder.setPositiveButton("OK", null);
+            builder.show();
+        } else {
+            int LOCATION_UPDATE_INTERVAL = 10000;
+            int LOCATION_UPDATE_FASTEST_INTERVAL = 5000;
+            int LOCATION_UPDATE_SMALLEST_DISPLACEMENT = 10;
+
+            LocationRequest locationRequest = new LocationRequest.Builder(LOCATION_UPDATE_INTERVAL)
+                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                    .setMinUpdateDistanceMeters(LOCATION_UPDATE_SMALLEST_DISPLACEMENT)
+                    .setMinUpdateIntervalMillis(LOCATION_UPDATE_FASTEST_INTERVAL)
+                    .build();
+
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    super.onLocationResult(locationResult);
+                    if (locationResult == null) {
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
+                        currentPositionMarker.setPosition(currentPosition);
+                        map.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
+                    }
+                }
+            };
+
+
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+
+            requestingLocationUpdate = true;
+
+        }
+
+
+
+
+
+
+
+    }
+
+    private void stopLocationUpdate() {
+        if (requestingLocationUpdate) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+            requestingLocationUpdate = false;
+        }
+    }
+
+    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
+        map = googleMap;
 
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+        map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
                 MapsActivity.this.latLng = latLng;
                 // delete all markers
-                mMap.clear();
+                map.clear();
 
                 // create marker
                 MarkerOptions marker = new MarkerOptions().position(
                         new LatLng(latLng.latitude, latLng.longitude)).title("New Marker");
                 // adding marker
-                mMap.addMarker(marker);
+                map.addMarker(marker);
 
 
             }
         });
 
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(@NonNull Marker marker) {
                 // show a dialog do you want to save this location?
@@ -94,9 +188,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        // set a different marker on current position
+        // a label should be visible saying "You are here"
+        // the marker should be a different color
+
+        // get current position
+        // fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        currentPosition = new LatLng(-34, 151);
+        if (!MainActivity.PERMISSION) {
+            // show an alert dialog
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Permissions");
+            builder.setMessage("Please grant permissions to display your current location on the map");
+            builder.setPositiveButton("OK", null);
+            builder.show();
+        } else {
+            // get current location
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                                @Override
+                                public void onSuccess(Location location) {
+                                    if (location != null) {
+                                        currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
+                                    }
+                                }
+                            }
+                    );
+
+            // start location updates
+            startLocationUpdate();
+
+        }
+
+        currentPositionMarker = googleMap.addMarker(new MarkerOptions().position(currentPosition).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("You are here"));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
+
     }
 }
