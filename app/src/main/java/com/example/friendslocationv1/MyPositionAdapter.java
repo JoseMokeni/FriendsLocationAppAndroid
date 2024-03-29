@@ -2,6 +2,7 @@ package com.example.friendslocationv1;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -78,21 +79,47 @@ public class MyPositionAdapter extends RecyclerView.Adapter<MyPositionAdapter.My
             btnDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(context, "Delete button fired", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(context, "Delete button fired", Toast.LENGTH_SHORT).show();
+
+                    // ask the user if he is sure to delete the position
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Delete Position");
+                    builder.setMessage("Are you sure you want to delete this position?");
+                    builder.setPositiveButton("Yes", (dialog, which) -> {
+                        // delete the position
+                        Delete delete = new Delete(context);
+                        delete.execute();
+                    });
+                    builder.setNegativeButton("No", null);
+                    builder.show();
+
+
                 }
             });
             
             btnShowInMap.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(context, "Show in map fired", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(context, "Show in map button fired", Toast.LENGTH_SHORT).show();
+
+                    // show the position in the map
+                    Position p = data.get(getAdapterPosition());
+                    LatLng latLng = new LatLng(Double.parseDouble(p.getLatitude()), Double.parseDouble(p.getLongitude()));
+
+                    // send the position to maps activity
+                    // open the map activity
+
+                    Intent intent = new Intent(context, MapsActivity.class);
+                    intent.putExtra("position", latLng);
+                    context.startActivity(intent);
+
                 }
             });
 
 
         }
 
-        /*class Delete extends AsyncTask {
+        class Delete extends AsyncTask {
 
             Context con;
             AlertDialog alert;
@@ -119,21 +146,26 @@ public class MyPositionAdapter extends RecyclerView.Adapter<MyPositionAdapter.My
                 //internet connection => execute service
                 JSONParser parser = new JSONParser();
 
-                HashMap<String, String> params = new HashMap<String, String>();
+                HashMap<String, String> map = new HashMap<>();
+                map.put("id", data.get(getAdapterPosition()).getIdPosition() + "");
 
-                params.put("id", binding.edLongitudeGallery.getText().toString());
-
-                JSONObject response = parser.makeHttpRequest(Config.URL_ADD_POSITION, "POST", params);
+                JSONObject response = parser.makeHttpRequest(Config.URL_DELETE_POSITION, "GET", map);
 
                 try {
                     System.out.println(response.toString());
                     int success = response.getInt("success");
 
+                    if (success == 1) {
+                        data.remove(getAdapterPosition());
+                    }
+
                     message = response.getString("message");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
                 return null;
+
             }
 
             @Override
@@ -141,11 +173,13 @@ public class MyPositionAdapter extends RecyclerView.Adapter<MyPositionAdapter.My
                 //hide dialogue box show result
                 alert.dismiss();
 
+                notifyDataSetChanged();
+
                 Toast.makeText(con, message, Toast.LENGTH_SHORT).show();
 
             }
 
-        }*/
+        }
     }
 
 

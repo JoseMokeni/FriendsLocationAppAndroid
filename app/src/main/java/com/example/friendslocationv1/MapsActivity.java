@@ -149,8 +149,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapClick(LatLng latLng) {
                 MapsActivity.this.latLng = latLng;
-                // delete all markers
+                // delete all markers except currentPositionMarker
                 map.clear();
+                currentPositionMarker = googleMap.addMarker(new MarkerOptions().position(currentPosition).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("You are here"));
+
 
                 // create marker
                 MarkerOptions marker = new MarkerOptions().position(
@@ -221,7 +223,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         currentPositionMarker = googleMap.addMarker(new MarkerOptions().position(currentPosition).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("You are here"));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
+
+        // check if the intent has a position
+        Intent intent = getIntent();
+        if (intent.hasExtra("position")) {
+            latLng = intent.getParcelableExtra("position");
+            // create marker
+            MarkerOptions marker = new MarkerOptions().position(
+                    new LatLng(latLng.latitude, latLng.longitude)).title("New Marker");
+            // adding marker
+            map.addMarker(marker);
+
+            // move the camera to the position
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        } else {
+            // move the camera to the current position
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
+        }
 
     }
 }

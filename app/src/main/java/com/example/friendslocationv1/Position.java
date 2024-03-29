@@ -36,4 +36,7 @@ public class Position {
         return pseudo;
     }
 
+    public int getIdPosition() {
+        return idPosition;
+    }
 }

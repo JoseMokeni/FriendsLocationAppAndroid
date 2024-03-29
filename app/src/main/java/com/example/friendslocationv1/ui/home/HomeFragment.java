@@ -39,20 +39,8 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        binding.btnHomeDownload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //download data
-
-                /*JSONParser parser = new JSONParser();
-                JSONObject response = parser.makeHttpRequest(Config.URL_GET_ALL,"GET",null);*/
-
-                Download download = new Download(HomeFragment.this.getActivity());
-                download.execute();
-
-
-            }
-        });
+        Download download = new Download(HomeFragment.this.getActivity());
+        download.execute();
 
         return root;
     }
